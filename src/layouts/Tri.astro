@@ -1,0 +1,56 @@
+---
+// layouts/tri.blade.php: left sidebar, main column, right sidebar, with mobile tabs.
+import Base from './Base.astro';
+
+interface Props {
+	title?: string;
+	description?: string;
+	image?: string;
+	containerAttrs?: Record<string, string>;
+	shelfContext?: { set: number } | 'clear' | 'from-query';
+	bodyWrapClasses?: string;
+}
+const { containerAttrs = {}, bodyWrapClasses = '', ...base } = Astro.props;
+---
+
+<Base {...base} bodyClass="tri-layout" contentComponents="tri-layout">
+	<div class="tri-layout-mobile-tabs print-hidden">
+		<div class="grid half no-break no-gap">
+			<button
+				type="button"
+				refs="tri-layout@tab"
+				data-tab="info"
+				aria-label="Tab: Show Secondary Information"
+				class="tri-layout-mobile-tab px-m py-m text-primary">Info</button
+			>
+			<button
+				type="button"
+				refs="tri-layout@tab"
+				data-tab="content"
+				aria-label="Tab: Show Primary Content"
+				aria-selected="true"
+				class="tri-layout-mobile-tab px-m py-m text-primary active">Content</button
+			>
+		</div>
+	</div>
+
+	<div refs="tri-layout@container" class="tri-layout-container" {...containerAttrs}>
+		<div class="tri-layout-left print-hidden pt-m" id="sidebar">
+			<aside class="tri-layout-left-contents">
+				<slot name="left" />
+			</aside>
+		</div>
+
+		<div class={`${bodyWrapClasses} tri-layout-middle`}>
+			<div id="main-content" class="tri-layout-middle-contents">
+				<slot />
+			</div>
+		</div>
+
+		<div class="tri-layout-right print-hidden pt-m">
+			<aside class="tri-layout-right-contents">
+				<slot name="right" />
+			</aside>
+		</div>
+	</div>
+</Base>

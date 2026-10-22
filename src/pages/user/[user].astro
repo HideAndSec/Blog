@@ -1,0 +1,115 @@
+---
+// users/profile.blade.php
+import ActivityList from '../../components/ActivityList.astro';
+import EntityList from '../../components/EntityList.astro';
+import Icon from '../../components/Icon.astro';
+import Simple from '../../layouts/Simple.astro';
+import { avatarUrl, loadSite, recentlyCreated, userActivity, type Entity, type User } from '../../lib/bookstack';
+import { countOf, phpUrlencode } from '../../lib/text';
+import { diffForHumans } from '../../lib/time';
+
+export async function getStaticPaths() {
+	const site = await loadSite();
+	return site.users.map((user) => ({ params: { user: user.slug }, props: { user } }));
+}
+
+const { user } = Astro.props as { user: User };
+const site = await loadSite();
+const mine = <T extends Entity>(list: T[]) => list.filter((e) => e.createdBy === user);
+const created = {
+	pages: mine(site.pages),
+	chapters: mine(site.chapters),
+	books: mine(site.books),
+	shelves: mine(site.shelves),
+};
+const sections = [
+	{ id: 'recent-pages', title: 'Recently Created Pages', list: created.pages, type: 'page', none: 'pages' },
+	{ id: 'recent-chapters', title: 'Recently Created Chapters', list: created.chapters, type: 'chapter', none: 'chapters' },
+	{ id: 'recent-books', title: 'Recently Created Books', list: created.books, type: 'book', none: 'books' },
+	{ id: 'recent-shelves', title: 'Recently Created Shelves', list: created.shelves, type: 'bookshelf', none: 'shelves' },
+];
+const viewAll = (type: string) => `/search/?term=${phpUrlencode(`{created_by:${user.slug}} {type:${type}}`)}`;
+---
+
+<Simple>
+	<div class="container pt-xl">
+		<div class="grid right-focus reverse-collapse">
+			<div>
+				<section id="recent-user-activity" class="mb-xl">
+					<h5>Recent Activity</h5>
+					<ActivityList activity={userActivity(site, user)} />
+				</section>
+			</div>
+
+			<div>
+				<section class="card content-wrap auto-height">
+					<div class="grid half v-center">
+						<div>
+							<div class="mr-m float left">
+								<img class="avatar square huge" src={avatarUrl(user, 'large')} alt={user.name} />
+							</div>
+							<div>
+								<h4 class="mt-md">{user.name}</h4>
+								<p class="text-muted">
+									User for <span data-hs-time={user.createdAt.toISOString()} data-hs-format=":time" data-hs-absolute
+										>{diffForHumans(user.createdAt, new Date(), true)}</span
+									>
+								</p>
+							</div>
+						</div>
+						<div id="content-counts">
+							<div class="text-muted">Created Content</div>
+							<div class="grid half v-center no-row-gap">
+								<div class="icon-list">
+									<a href="#recent-pages" class="text-page icon-list-item">
+										<span><Icon name="page" /></span>
+										<span>{countOf(created.pages.length, 'Page', 'Pages')}</span>
+									</a>
+									<a href="#recent-chapters" class="text-chapter icon-list-item">
+										<span><Icon name="chapter" /></span>
+										<span>{countOf(created.chapters.length, 'Chapter', 'Chapters')}</span>
+									</a>
+								</div>
+								<div class="icon-list">
+									<a href="#recent-books" class="text-book icon-list-item">
+										<span><Icon name="book" /></span>
+										<span>{countOf(created.books.length, 'Book', 'Books')}</span>
+									</a>
+									<a href="#recent-shelves" class="text-bookshelf icon-list-item">
+										<span><Icon name="bookshelf" /></span>
+										<span>{countOf(created.shelves.length, 'Shelf', 'Shelves')}</span>
+									</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				{
+					sections.map((section) => {
+						const recent = recentlyCreated(section.list as Entity[], 5);
+						return (
+							<section class="card content-wrap auto-height book-contents">
+								<h2 id={section.id} class="list-heading">
+									{section.title}
+									{recent.length > 0 && (
+										<a href={viewAll(section.type)} class="text-small ml-s">
+											View All
+										</a>
+									)}
+								</h2>
+								{recent.length > 0 ? (
+									<EntityList entities={recent} showPath />
+								) : (
+									<p class="text-muted">
+										{user.name} has not created any {section.none}
+									</p>
+								)}
+							</section>
+						);
+					})
+				}
+			</div>
+		</div>
+	</div>
+</Simple>

@@ -1,0 +1,17 @@
+---
+// The "… Permissions Active" notices from the details panels.
+import Icon from './Icon.astro';
+
+interface Props {
+	labels: string[];
+}
+const { labels } = Astro.props;
+---
+
+{
+	labels.map((label) => (
+		<div class="active-restriction">
+			<Icon name="lock" />{label}
+		</div>
+	))
+}

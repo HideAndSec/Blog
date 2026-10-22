@@ -1,0 +1,24 @@
+---
+// entities/list-item-basic.blade.php
+import type { Entity } from '../lib/bookstack';
+import Icon from './Icon.astro';
+
+interface Props {
+	entity: Entity;
+	classes?: string;
+}
+const { entity, classes = '' } = Astro.props;
+---
+
+<a
+	href={entity.url}
+	class={`${entity.type} ${classes} entity-list-item`}
+	data-entity-type={entity.type}
+	data-entity-id={entity.id}
+>
+	<span role="presentation" class={`icon text-${entity.type}`}><Icon name={entity.type} /></span>
+	<div class="content">
+		<h4 class="entity-list-item-name break-text">{entity.name}</h4>
+		<slot />
+	</div>
+</a>

@@ -1,0 +1,16 @@
+---
+// entities/search-form.blade.php (results come from public/js/hideandsec.js).
+import Icon from './Icon.astro';
+
+interface Props {
+	label: string;
+}
+const { label } = Astro.props;
+---
+
+<div class="mb-xl">
+	<form refs="entity-search@searchForm" class="search-box flexible" role="search">
+		<input refs="entity-search@searchInput" type="text" aria-label={label} name="term" placeholder={label} />
+		<button type="submit" aria-label="Search"><Icon name="search" /></button>
+	</form>
+</div>

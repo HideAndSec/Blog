@@ -1,0 +1,74 @@
+---
+// shelves/index.blade.php. The live site hid the view toggle from guests: always the list.
+import EntityList from '../../components/EntityList.astro';
+import ShelfListItem from '../../components/ShelfListItem.astro';
+import SortControl from '../../components/SortControl.astro';
+import Tri from '../../layouts/Tri.astro';
+import { loadSite, popular, recentlyCreated } from '../../lib/bookstack';
+import { sorted } from '../../lib/sort';
+
+const site = await loadSite();
+const shelves = sorted(site.shelves, 'name');
+const popularShelves = popular(site.shelves, 4);
+const newShelves = recentlyCreated(site.shelves, 4);
+---
+
+<Tri title="Shelves" shelfContext="clear">
+	<main class="content-wrap mt-m card">
+		<div class="grid half v-center">
+			<h1 class="list-heading">Shelves</h1>
+			<div class="text-right">
+				<SortControl type="bookshelves" options={{ name: 'Name', created_at: 'Created Date', updated_at: 'Updated Date' }} />
+			</div>
+		</div>
+
+		{
+			shelves.length > 0 ? (
+				<>
+					<div class="entity-list" data-hs-sortable="bookshelves">
+						{shelves.map((shelf, i) => (
+							<>
+								{i !== 0 && <hr class="my-m" />}
+								<ShelfListItem shelf={shelf} index={i} />
+							</>
+						))}
+					</div>
+					<div />
+				</>
+			) : (
+				<p class="text-muted">No shelves have been created</p>
+			)
+		}
+	</main>
+
+	<Fragment slot="right">
+		<div class="actions mb-xl">
+			<h5>Actions</h5>
+			<div class="icon-list text-primary"></div>
+		</div>
+	</Fragment>
+
+	<Fragment slot="left">
+		<div id="popular" class="mb-xl">
+			<h5>Popular Shelves</h5>
+			{
+				popularShelves.length > 0 ? (
+					<EntityList entities={popularShelves} style="compact" />
+				) : (
+					<div class="text-muted">The most popular shelves will appear here.</div>
+				)
+			}
+		</div>
+
+		<div id="new" class="mb-xl">
+			<h5>New Shelves</h5>
+			{
+				newShelves.length > 0 ? (
+					<EntityList entities={newShelves} style="compact" />
+				) : (
+					<div class="text-muted">The most recently created shelves will appear here.</div>
+				)
+			}
+		</div>
+	</Fragment>
+</Tri>

@@ -1,0 +1,54 @@
+---
+// entities/book-tree.blade.php + chapters/parts/child-menu.blade.php
+import type { Book, Entity } from '../lib/bookstack';
+import EntityListItemBasic from './EntityListItemBasic.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+	book: Book;
+	current: Entity;
+}
+const { book, current } = Astro.props;
+const selected = (entity: Entity) => (entity === current ? 'selected' : '');
+---
+
+<nav id="book-tree" class="book-tree mb-xl" aria-label="Book Navigation">
+	<h5>Book Navigation</h5>
+
+	<ul class="sidebar-page-list mt-xs menu entity-list">
+		<li class="list-item-book book">
+			<EntityListItemBasic entity={book} classes={selected(book)} />
+		</li>
+
+		{
+			book.tree.map((child) => {
+				const isOpen = child.type === 'chapter' && (child === current || (current.type === 'page' && current.chapter === child));
+				return (
+					<li class={`list-item-${child.type} ${child.type} `}>
+						<EntityListItemBasic entity={child} classes={selected(child)} />
+						{child.type === 'chapter' && child.pages.length > 0 && (
+							<div class="entity-list-item no-hover">
+								<span role="presentation" class="icon text-chapter" />
+								<div class="content">
+									<div class="chapter-child-menu">
+										<button chapter-toggle type="button" aria-expanded={isOpen ? 'true' : 'false'} class={`text-muted ${isOpen ? 'open' : ''}`}>
+											<Icon name="caret-right" /> <Icon name="page" />{' '}
+											<span>{child.pages.length === 1 ? '1 Page' : `${child.pages.length} Pages`}</span>
+										</button>
+										<ul class={`sub-menu inset-list ${isOpen ? 'open' : ''}`} style={isOpen ? 'display: block;' : undefined} role="menu">
+											{child.pages.map((page) => (
+												<li class="list-item-page " role="presentation">
+													<EntityListItemBasic entity={page} classes={selected(page)} />
+												</li>
+											))}
+										</ul>
+									</div>
+								</div>
+							</div>
+						)}
+					</li>
+				);
+			})
+		}
+	</ul>
+</nav>

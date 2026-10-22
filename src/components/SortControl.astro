@@ -1,0 +1,49 @@
+---
+// entities/sort.blade.php. The choice is kept in the browser (public/js/hideandsec.js).
+import Icon from './Icon.astro';
+
+interface Props {
+	type: string;
+	options: Record<string, string>;
+	sort?: string;
+	order?: 'asc' | 'desc';
+}
+const { type, options, sort = Object.keys(options)[0], order = 'asc' } = Astro.props;
+---
+
+<div class="list-sort-container" hs-list-sort-control data-hs-sort-type={type}>
+	<div class="list-sort-label">Sort</div>
+	<form>
+		<input type="hidden" value={sort} name="sort" />
+		<input type="hidden" value={order} name="order" />
+
+		<div class="list-sort">
+			<div component="dropdown" class="list-sort-type dropdown-container">
+				<div refs="dropdown@toggle" aria-haspopup="true" aria-expanded="false" aria-label="Sort Options" tabindex="0">
+					{options[sort]}
+				</div>
+				<ul refs="dropdown@menu" class="dropdown-menu">
+					{
+						Object.entries(options).map(([key, label]) => (
+							<li class={key === sort ? 'active' : undefined}>
+								<a href="#" data-sort-value={key}>
+									{label}
+								</a>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+			<button
+				href="#"
+				class="list-sort-dir"
+				type="button"
+				data-sort-dir
+				aria-label={`Sort Direction Toggle - ${order === 'asc' ? 'Sort Ascending' : 'Sort Descending'}`}
+				tabindex="0"
+			>
+				<Icon name={order === 'desc' ? 'sort-up' : 'sort-down'} />
+			</button>
+		</div>
+	</form>
+</div>

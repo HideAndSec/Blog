@@ -1,0 +1,16 @@
+---
+// layouts/simple.blade.php
+import Base from './Base.astro';
+
+const props = Astro.props;
+---
+
+<Base {...props}>
+	<div class="flex-fill flex">
+		<div class="content flex">
+			<div id="main-content" class="scroll-body">
+				<slot />
+			</div>
+		</div>
+	</div>
+</Base>

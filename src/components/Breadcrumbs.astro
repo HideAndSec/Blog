@@ -1,0 +1,24 @@
+---
+// BreadcrumbsViewComposer: crumbs starting with a book get the shelf the visitor came
+// through in front. The session that kept it is the browser's here: one variant is
+// rendered per shelf and the head script of layouts/Base.astro picks it.
+import type { Entity } from '../lib/bookstack';
+import BreadcrumbNav from './BreadcrumbNav.astro';
+
+interface Props {
+	crumbs: Entity[];
+}
+const { crumbs } = Astro.props;
+const shelves = crumbs[0]?.type === 'book' ? crumbs[0].shelves : [];
+const rules = shelves
+	.map(
+		(shelf) =>
+			`html[data-hs-shelf="${shelf.id}"] nav[data-hs-crumbs-shelf="${shelf.id}"] {display: flex !important;}\n` +
+			`html[data-hs-shelf="${shelf.id}"] [data-hs-crumbs-default] {display: none !important;}`,
+	)
+	.join('\n');
+---
+
+<BreadcrumbNav crumbs={crumbs} attrs={shelves.length ? { 'data-hs-crumbs-default': true } : {}} />
+{shelves.map((shelf) => <BreadcrumbNav crumbs={[shelf, ...crumbs]} attrs={{ 'data-hs-crumbs-shelf': String(shelf.id), hidden: true }} />)}
+{rules && <style is:inline set:html={rules} />}

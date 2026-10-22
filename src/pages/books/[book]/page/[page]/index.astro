@@ -1,0 +1,108 @@
+---
+// pages/show.blade.php
+import ActionsHeading from '../../../../../components/ActionsHeading.astro';
+import BookTree from '../../../../../components/BookTree.astro';
+import Breadcrumbs from '../../../../../components/Breadcrumbs.astro';
+import EntityMeta from '../../../../../components/EntityMeta.astro';
+import ExportMenu from '../../../../../components/ExportMenu.astro';
+import Icon from '../../../../../components/Icon.astro';
+import Restrictions from '../../../../../components/Restrictions.astro';
+import SiblingNavigation from '../../../../../components/SiblingNavigation.astro';
+import TagList from '../../../../../components/TagList.astro';
+import Tri from '../../../../../layouts/Tri.astro';
+import { loadSite, shortName, siblingsInReadingOrder, type Page } from '../../../../../lib/bookstack';
+import { strLimit } from '../../../../../lib/text';
+
+export async function getStaticPaths() {
+	const site = await loadSite();
+	return site.pages.map((page) => ({ params: { book: page.book.slug, page: page.slug }, props: { page } }));
+}
+
+const { page } = Astro.props as { page: Page };
+const { book, chapter } = page;
+const { previous, next } = siblingsInReadingOrder(page);
+---
+
+<Tri title={shortName(page)} description={strLimit(page.text, 100)}>
+	<div class="mb-m print-hidden">
+		<Breadcrumbs crumbs={[book, ...(chapter ? [chapter] : []), page]} />
+	</div>
+
+	<main class="content-wrap card">
+		<div class="page-content clearfix" page-display={page.id}>
+			<div class="pointer-container" id="pointer">
+				<div class="pointer anim ">
+					<span class="icon mr-xxs"><Icon name="link" /> <Icon name="include" attrs={{ style: 'display:none;' }} /></span>
+					<div class="input-group inline block">
+						<input readonly="readonly" type="text" id="pointer-url" placeholder="url" />
+						<button class="button outline icon" data-clipboard-target="#pointer-url" type="button" title="Copy Link"
+							><Icon name="copy" /></button
+						>
+					</div>
+				</div>
+			</div>
+			<div dir="auto">
+				<h1 class="break-text" id="bkmrk-page-title">{page.name}</h1>
+
+				<div style="clear:left;"></div>
+
+				<Fragment set:html={page.html} />
+			</div>
+		</div>
+	</main>
+
+	<SiblingNavigation previous={previous} next={next} />
+
+	<Fragment slot="left">
+		{
+			page.tags.length > 0 && (
+				<section>
+					<TagList tags={page.tags} />
+				</section>
+			)
+		}
+
+		{
+			page.navigation.length > 0 && (
+				<nav id="page-navigation" class="mb-xl" aria-label="Page Navigation">
+					<h5>Page Navigation</h5>
+					<div class="body">
+						<div class="sidebar-page-nav menu">
+							{page.navigation.map((item) => (
+								<li class={`page-nav-item h${item.level}`}>
+									<a href={item.link} class="text-limit-lines-1 block">
+										{item.text}
+									</a>
+									<div class="primary-background sidebar-page-nav-bullet" />
+								</li>
+							))}
+						</div>
+					</div>
+				</nav>
+			)
+		}
+
+		<BookTree book={book} current={page} />
+	</Fragment>
+
+	<Fragment slot="right">
+		<div id="page-details" class="entity-details mb-xl">
+			<h5>Details</h5>
+			<div class="body text-small blended-links">
+				<EntityMeta entity={page} />
+				<Restrictions
+					labels={[
+						...(book.restricted ? ['Book Permissions Active'] : []),
+						...(chapter?.restricted ? ['Chapter Permissions Active'] : []),
+						...(page.restricted ? ['Page Permissions Active'] : []),
+					]}
+				/>
+			</div>
+		</div>
+
+		<ActionsHeading>
+			<hr class="primary-background" />
+			<ExportMenu entity={page} />
+		</ActionsHeading>
+	</Fragment>
+</Tri>

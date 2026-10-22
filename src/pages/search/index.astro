@@ -1,0 +1,139 @@
+---
+// search/all.blade.php. The page is a shell: public/js/hideandsec.js reads the query,
+// fills the form and runs the search on /search/index.json the way SearchRunner does.
+import Icon from '../../components/Icon.astro';
+import Simple from '../../layouts/Simple.astro';
+
+const types = [
+	{ entity: 'page', label: 'Page' },
+	{ entity: 'chapter', label: 'Chapter' },
+	{ entity: 'book', label: 'Book' },
+	{ entity: 'bookshelf', label: 'Shelf' },
+];
+const dates = [
+	{ name: 'updated_after', label: 'Updated after' },
+	{ name: 'updated_before', label: 'Updated before' },
+	{ name: 'created_after', label: 'Created after' },
+	{ name: 'created_before', label: 'Created before' },
+];
+---
+
+<Simple title="Search">
+	<div class="container mt-xl" id="search-system" hs-search-page>
+		<div class="grid right-focus reverse-collapse gap-xl">
+			<div>
+				<div>
+					<h5>Advanced Search</h5>
+
+					<form method="get" action="/search/">
+						<h6>Search Terms</h6>
+						<input type="text" name="search" value="" />
+
+						<h6>Content Type</h6>
+						<div class="form-group">
+							{
+								types.map((type, i) => (
+									<>
+										{i === 2 && <br />}
+										<label class={`inline checkbox text-${type.entity}`}>
+											<input type="checkbox" name="types[]" checked value={type.entity} />{type.label}
+										</label>
+									</>
+								))
+							}
+						</div>
+
+						{
+							[
+								{ title: 'Exact Matches', type: 'exact' },
+								{ title: 'Tag Searches', type: 'tags' },
+							].map((list) => (
+								<>
+									<h6>{list.title}</h6>
+									<table
+										component="add-remove-rows"
+										option:add-remove-rows:remove-selector="button.text-neg"
+										option:add-remove-rows:row-selector="tr"
+										class="no-style"
+										data-hs-term-list={list.type}
+									>
+										<tr class="hidden" refs="add-remove-rows@model">
+											<td class="pb-s pr-m">
+												<input class="exact-input outline" type="text" name={`${list.type}[]`} value="" />
+											</td>
+											<td>
+												<button type="button" class="text-neg text-button">
+													<Icon name="close" />
+												</button>
+											</td>
+										</tr>
+										<tr>
+											<td colspan="2">
+												<button refs="add-remove-rows@add" type="button" class="text-button">
+													<Icon name="add-circle" />Add
+												</button>
+											</td>
+										</tr>
+									</table>
+								</>
+							))
+						}
+
+						<h6>Date Options</h6>
+						{
+							dates.map((date) => (
+								<table class="no-style form-table mb-xs">
+									<tr>
+										<td width="200">{date.label}</td>
+										<td width="80" />
+									</tr>
+									<tr component="optional-input">
+										<td>
+											<button type="button" refs="optional-input@show" class="text-button ">
+												Set Date
+											</button>
+											<input
+												class="tag-input hidden"
+												refs="optional-input@input"
+												value=""
+												type="date"
+												name={`filters[${date.name}]`}
+												pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+											/>
+										</td>
+										<td>
+											<button type="button" refs="optional-input@remove" class="text-neg text-button hidden">
+												<Icon name="close" />
+											</button>
+										</td>
+									</tr>
+								</table>
+							))
+						}
+
+						<button type="submit" class="button">Update Search</button>
+					</form>
+				</div>
+			</div>
+			<div>
+				<div class="card content-wrap">
+					<h1 class="list-heading">Search Results</h1>
+
+					<form action="/search/" method="GET" class="search-box flexible hide-over-l">
+						<input value="" type="text" name="term" placeholder="Search" />
+						<button type="submit"><Icon name="search" /></button>
+					</form>
+
+					<h6 class="text-muted" data-hs-search-total>0 total results found</h6>
+					<div class="book-contents" data-hs-search-results>
+						<p class="text-muted empty-text">No items available</p>
+					</div>
+
+					<div class="text-right mt-m" data-hs-search-more hidden>
+						<a href="/search/" class="button outline">More Results</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</Simple>

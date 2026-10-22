@@ -1,0 +1,50 @@
+---
+// entities/meta.blade.php, as seen by a guest.
+import type { Entity } from '../lib/bookstack';
+import Icon from './Icon.astro';
+import RelTime from './RelTime.astro';
+
+interface Props {
+	entity: Entity;
+}
+const { entity } = Astro.props;
+---
+
+<div class="entity-meta">
+	{
+		entity.type === 'page' && (
+			<div>
+				<Icon name="history" />Revision #{entity.revisionCount}
+			</div>
+		)
+	}
+	{
+		entity.ownedBy && entity.ownedBy !== entity.createdBy && (
+			<div>
+				<Icon name="user" />Owned by <a href={entity.ownedBy.url}>{entity.ownedBy.name}</a>
+			</div>
+		)
+	}
+	{
+		entity.createdBy ? (
+			<div>
+				<Icon name="star" />Created <RelTime date={entity.createdAt} withTitle /> by <a href={entity.createdBy.url}>{entity.createdBy.name}</a>
+			</div>
+		) : (
+			<div>
+				<Icon name="star" /><RelTime date={entity.createdAt} withTitle format="Created :time" />
+			</div>
+		)
+	}
+	{
+		entity.updatedBy ? (
+			<div>
+				<Icon name="edit" />Updated <RelTime date={entity.updatedAt} withTitle /> by <a href={entity.updatedBy.url}>{entity.updatedBy.name}</a>
+			</div>
+		) : (
+			<div>
+				<Icon name="edit" /><RelTime date={entity.updatedAt} withTitle format="Updated :time" />
+			</div>
+		)
+	}
+</div>

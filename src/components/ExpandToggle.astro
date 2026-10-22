@@ -1,0 +1,18 @@
+---
+// home/parts/expand-toggle.blade.php. The open state is kept in the browser.
+import Icon from './Icon.astro';
+
+interface Props {
+	target: string;
+	key: string;
+	classes?: string;
+}
+const { target, key, classes = '' } = Astro.props;
+---
+
+<button type="button" hs-expand-toggle={target} data-hs-expand-key={key} class={`icon-list-item ${classes}`}>
+	<span><Icon name="expand-text" /></span>
+	<span>Toggle Details</span>
+</button>
+
+<style is:inline set:html={`.hs-expanded-${key} ${target} {display: block;}`}></style>

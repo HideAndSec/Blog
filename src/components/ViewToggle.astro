@@ -1,0 +1,22 @@
+---
+// entities/view-toggle.blade.php. Both buttons are rendered; the stored choice picks one.
+import Icon from './Icon.astro';
+
+interface Props {
+	type: string;
+}
+const { type } = Astro.props;
+---
+
+<div>
+	<form class="inline" hs-view-toggle data-hs-view-type={type}>
+		<button type="button" class="icon-list-item text-primary" data-hs-view-list={type} data-hs-switch-to="grid">
+			<span class="icon"><Icon name="grid" /></span>
+			<span>Grid View</span>
+		</button>
+		<button type="button" class="icon-list-item text-primary" data-hs-view-grid={type} data-hs-switch-to="list">
+			<span><Icon name="list" /></span>
+			<span>List View</span>
+		</button>
+	</form>
+</div>

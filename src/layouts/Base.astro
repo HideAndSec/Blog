@@ -1,0 +1,108 @@
+---
+// layouts/base.blade.php
+import Header from '../components/Header.astro';
+import Icon from '../components/Icon.astro';
+import customHead from '../custom-head.html?raw';
+
+interface Props {
+	title?: string;
+	bodyClass?: string;
+	contentComponents?: string;
+	description?: string;
+	image?: string;
+	searchTerm?: string;
+	/** ShelfContext: what this page does to the shelf remembered for breadcrumbs. */
+	shelfContext?: { set: number } | 'clear' | 'from-query';
+}
+const { title, bodyClass = '', contentComponents = '', description, image, searchTerm, shelfContext } = Astro.props;
+const fullTitle = `${title ? `${title} | ` : ''}HideAndSec`;
+const site = Astro.site!;
+---
+
+<!doctype html>
+<html lang="en-GB" dir="ltr" class={bodyClass}>
+	<head>
+		<title>{fullTitle}</title>
+
+		<meta name="viewport" content="width=device-width" />
+		<meta name="token" content="" />
+		<meta name="base-url" content={site.origin} />
+		<meta charset="utf-8" />
+
+		<meta property="og:title" content={fullTitle} />
+		<meta property="og:url" content={new URL(Astro.url.pathname, site).href} />
+		{description !== undefined && <meta property="og:description" content={description} />}
+		{image && <meta property="og:image" content={new URL(image, site).href} />}
+
+		<link rel="icon" href="/favicon.ico" />
+		<link rel="stylesheet" href="/dist/styles.css" />
+		<link rel="stylesheet" media="print" href="/dist/print-styles.css" />
+
+		<style is:inline id="custom-styles" data-color="#000000" data-color-light="rgba(0,0,0,0.15)">
+			:root {
+				--color-primary: #000000;
+				--color-primary-light: rgba(0,0,0,0.15);
+				--color-bookshelf: #a94747;
+				--color-book: #077b70;
+				--color-chapter: #af4d0d;
+				--color-page: #206ea7;
+				--color-page-draft: #7e50b1;
+			}
+		</style>
+		<Fragment set:html={customHead} />
+		<style is:inline>
+			html:not(.hs-grid-books) [data-hs-view-grid='books'], html.hs-grid-books [data-hs-view-list='books'],
+			html:not(.hs-grid-shelf) [data-hs-view-grid='shelf'], html.hs-grid-shelf [data-hs-view-list='shelf'],
+			[data-hs-page][hidden], [data-hs-crumbs-shelf] {display: none !important;}
+		</style>
+		<script is:inline>
+			// Per-browser settings that BookStack kept per user (list views, expanded details).
+			(function () {
+				var root = document.documentElement, views = { books: 'list', shelf: 'grid' };
+				// app.js builds its requests on base-url: keep them on this host (previews, forks).
+				document.querySelector('meta[name="base-url"]').setAttribute('content', location.origin);
+				function get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+				for (var type in views) if ((get('hs-view-' + type) || views[type]) === 'grid') root.classList.add('hs-grid-' + type);
+				if (get('hs-expand-home-details') === 'yes') root.classList.add('hs-expanded-home-details');
+			})();
+		</script>
+		<script is:inline define:vars={{ shelfContext: shelfContext ?? null }}>
+			// ShelfContext, kept like a 120 minute session.
+			(function () {
+				var key = 'hs-shelf-context', now = Date.now(), lifetime = 120 * 60 * 1000, context = null;
+				try {
+					context = JSON.parse(localStorage.getItem(key) || 'null');
+					if (context && now - context.at > lifetime) context = null;
+					var shelf = shelfContext && shelfContext.set;
+					if (shelfContext === 'from-query') shelf = parseInt(new URLSearchParams(location.search).get('shelf'), 10) || null;
+					if (shelfContext === 'clear') context = null;
+					else if (shelf) context = { id: shelf };
+					if (context) {
+						context.at = now;
+						localStorage.setItem(key, JSON.stringify(context));
+					} else localStorage.removeItem(key);
+				} catch (e) {}
+				if (context) document.documentElement.setAttribute('data-hs-shelf', context.id);
+			})();
+		</script>
+		<slot name="head" />
+	</head>
+	<body class={bodyClass}>
+		<Header searchTerm={searchTerm} />
+
+		<div id="content" components={contentComponents} class="block">
+			<slot />
+		</div>
+
+		<div back-to-top class="primary-background print-hidden">
+			<div class="inner">
+				<Icon name="chevron-up" /> <span>Back to top</span>
+			</div>
+		</div>
+
+		{['sort-up', 'sort-down'].map((name) => <template data-hs-icon={name}><Icon name={name} /></template>)}
+
+		<script is:inline src="/dist/app.js"></script>
+		<script is:inline src="/js/hideandsec.js"></script>
+	</body>
+</html>

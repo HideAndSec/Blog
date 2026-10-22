@@ -1,0 +1,41 @@
+---
+// books/parts/list.blade.php, with both views rendered (list by default, as for guests).
+import type { Book } from '../lib/bookstack';
+import { sorted } from '../lib/sort';
+import BookListItem from './BookListItem.astro';
+import GridItem from './GridItem.astro';
+import SortControl from './SortControl.astro';
+
+interface Props {
+	books: Book[];
+}
+const books = sorted(Astro.props.books, 'name');
+---
+
+<main class="content-wrap mt-m card">
+	<div class="grid half v-center no-row-gap">
+		<h1 class="list-heading">Books</h1>
+		<div class="text-m-right my-m">
+			<SortControl type="books" options={{ name: 'Name', created_at: 'Created Date', updated_at: 'Updated Date' }} />
+		</div>
+	</div>
+	{
+		books.length > 0 ? (
+			<>
+				<div class="entity-list" data-hs-view-list="books" data-hs-sortable="books">
+					{books.map((book, i) => (
+						<BookListItem book={book} index={i} />
+					))}
+				</div>
+				<div class="grid third" data-hs-view-grid="books" data-hs-sortable="books">
+					{books.map((book, i) => (
+						<GridItem entity={book} index={i} />
+					))}
+				</div>
+				<div />
+			</>
+		) : (
+			<p class="text-muted">No books have been created</p>
+		)
+	}
+</main>

@@ -1,0 +1,47 @@
+---
+// entities/tag-list.blade.php
+import type { Tag } from '../lib/bookstack';
+import { phpUrlencode } from '../lib/text';
+import Icon from './Icon.astro';
+
+interface Props {
+	tags: Tag[];
+	linked?: boolean;
+}
+const { tags, linked = true } = Astro.props;
+const search = (term: string) => `/search/?term=${phpUrlencode(term)}`;
+---
+
+{
+	tags.map((tag) => (
+		<div class="tag-item primary-background-light">
+			{linked ? (
+				<>
+					<div class="tag-name">
+						<a href={search(`[${tag.name}]`)}>
+							<Icon name="tag" />{tag.name}
+						</a>
+					</div>
+					{tag.value && (
+						<div class="tag-value">
+							<a href={search(`[${tag.name}=${tag.value}]`)}>{tag.value}</a>
+						</div>
+					)}
+				</>
+			) : (
+				<>
+					<div class="tag-name">
+						<span>
+							<Icon name="tag" />{tag.name}
+						</span>
+					</div>
+					{tag.value && (
+						<div class="tag-value">
+							<span>{tag.value}</span>
+						</div>
+					)}
+				</>
+			)}
+		</div>
+	))
+}

@@ -1,0 +1,29 @@
+---
+// entities/grid-item.blade.php
+import { coverUrl, excerpt, type Book, type Shelf } from '../lib/bookstack';
+import { dayDateTime } from '../lib/time';
+import Icon from './Icon.astro';
+import RelTime from './RelTime.astro';
+import { sortAttrs } from '../lib/sort';
+
+interface Props {
+	entity: Book | Shelf;
+	index?: number;
+}
+const { entity, index = 0 } = Astro.props;
+---
+
+<a href={entity.url} class="grid-card" data-entity-type={entity.type} data-entity-id={entity.id} {...sortAttrs(entity, index)}>
+	<div class={`bg-${entity.type} featured-image-container-wrap`}>
+		<div class="featured-image-container" style={entity.cover ? `background-image: url('${coverUrl(entity)}')` : undefined}></div>
+		<Icon name={entity.type} />
+	</div>
+	<div class="grid-card-content">
+		<h2 class="text-limit-lines-2">{entity.name}</h2>
+		<p class="text-muted">{excerpt(entity, 130)}</p>
+	</div>
+	<div class="grid-card-footer text-muted">
+		<p><Icon name="star" /><RelTime date={entity.createdAt} withTitle format="Created :time" /></p>
+		<p><Icon name="edit" /><RelTime date={entity.updatedAt} withTitle format="Updated :time" /></p>
+	</div>
+</a>

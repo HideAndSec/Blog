@@ -1,0 +1,56 @@
+---
+// common/activity-list.blade.php + common/activity-item.blade.php
+import { avatarUrl, type Activity } from '../lib/bookstack';
+import Icon from './Icon.astro';
+import RelTime from './RelTime.astro';
+
+const TEXT: Record<string, string> = {
+	page_create: 'created page',
+	page_update: 'updated page',
+	page_delete: 'deleted page',
+	page_restore: 'restored page',
+	page_move: 'moved page',
+	chapter_create: 'created chapter',
+	chapter_update: 'updated chapter',
+	chapter_delete: 'deleted chapter',
+	chapter_move: 'moved chapter',
+	book_create: 'created book',
+	book_update: 'updated book',
+	book_delete: 'deleted book',
+	book_sort: 'sorted book',
+	bookshelf_create: 'created Bookshelf',
+	bookshelf_update: 'updated bookshelf',
+	bookshelf_delete: 'deleted bookshelf',
+	commented_on: 'commented on',
+	permissions_update: 'updated permissions',
+};
+
+interface Props {
+	activity: Activity[];
+}
+const { activity } = Astro.props;
+---
+
+{
+	activity.length > 0 ? (
+		<div class="activity-list">
+			{activity.map((item) => (
+				<div class="activity-list-item">
+					<div>{item.user && <img class="avatar" src={avatarUrl(item.user)} alt={item.user.name} />}</div>
+					<div>
+						{item.user ? <a href={item.user.url}>{item.user.name}</a> : 'Deleted User'} {TEXT[item.type] ?? item.type}{' '}
+						{item.entity && <a href={item.entity.url}>{item.entity.name}</a>}
+						<br />
+						<span class="text-muted">
+							<small>
+								<Icon name="time" /><RelTime date={item.createdAt} />
+							</small>
+						</span>
+					</div>
+				</div>
+			))}
+		</div>
+	) : (
+		<p class="text-muted empty-text">No activity to show</p>
+	)
+}

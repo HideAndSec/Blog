@@ -1,0 +1,43 @@
+---
+// home/books.blade.php: the home page shows the books list.
+import ActionsHeading from '../components/ActionsHeading.astro';
+import ActivityList from '../components/ActivityList.astro';
+import BooksList from '../components/BooksList.astro';
+import EntityList from '../components/EntityList.astro';
+import ExpandToggle from '../components/ExpandToggle.astro';
+import ViewToggle from '../components/ViewToggle.astro';
+import Tri from '../layouts/Tri.astro';
+import { latestActivity, loadSite, recentlyCreated, recentlyUpdated } from '../lib/bookstack';
+
+const site = await loadSite();
+---
+
+<Tri>
+	<BooksList books={site.books} />
+
+	<Fragment slot="left">
+		<div class="mb-xl">
+			<h5>Recent Books</h5>
+			<EntityList entities={recentlyCreated(site.books, 12)} style="compact" emptyText="No books have been created" />
+		</div>
+
+		<div class="mb-xl">
+			<h5><a class="no-color" href="/pages/recently-updated/">Recently Updated Pages</a></h5>
+			<div id="recently-updated-pages">
+				<EntityList entities={recentlyUpdated(site.pages, 12)} style="compact" emptyText="No pages have been recently updated" />
+			</div>
+		</div>
+
+		<div id="recent-activity" class="mb-xl">
+			<h5>Recent Activity</h5>
+			<ActivityList activity={latestActivity(site, 10)} />
+		</div>
+	</Fragment>
+
+	<Fragment slot="right">
+		<ActionsHeading>
+			<ViewToggle type="books" />
+			<ExpandToggle classes="text-primary" target=".entity-list.compact .entity-item-snippet" key="home-details" />
+		</ActionsHeading>
+	</Fragment>
+</Tri>

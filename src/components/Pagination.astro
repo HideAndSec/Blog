@@ -1,0 +1,59 @@
+---
+// Laravel's default paginator links, as rendered by BookStack.
+interface Props {
+	base: string;
+	current: number;
+	last: number;
+}
+const { base, current, last } = Astro.props;
+const href = (n: number) => `${base}?page=${n}`;
+const pages = Array.from({ length: last }, (_, i) => i + 1);
+---
+
+{
+	last > 1 && (
+		<nav>
+			<ul class="pagination">
+				{current === 1 ? (
+					<li class="page-item disabled" aria-disabled="true" aria-label="« Previous">
+						<span class="page-link" aria-hidden="true">
+							‹
+						</span>
+					</li>
+				) : (
+					<li class="page-item">
+						<a class="page-link" href={href(current - 1)} rel="prev" aria-label="« Previous">
+							‹
+						</a>
+					</li>
+				)}
+				{pages.map((n) =>
+					n === current ? (
+						<li class="page-item active" aria-current="page">
+							<span class="page-link">{n}</span>
+						</li>
+					) : (
+						<li class="page-item">
+							<a class="page-link" href={href(n)}>
+								{n}
+							</a>
+						</li>
+					),
+				)}
+				{current < last ? (
+					<li class="page-item">
+						<a class="page-link" href={href(current + 1)} rel="next" aria-label="Next »">
+							›
+						</a>
+					</li>
+				) : (
+					<li class="page-item disabled" aria-disabled="true" aria-label="Next »">
+						<span class="page-link" aria-hidden="true">
+							›
+						</span>
+					</li>
+				)}
+			</ul>
+		</nav>
+	)
+}

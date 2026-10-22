@@ -1,0 +1,36 @@
+---
+// common/detailed-listing-paginated.blade.php for /pages/recently-updated. Every page of
+// the listing is rendered; public/js/hideandsec.js shows the one asked for by ?page=.
+import EntityList from '../../components/EntityList.astro';
+import Pagination from '../../components/Pagination.astro';
+import Simple from '../../layouts/Simple.astro';
+import { loadSite, recentlyUpdated } from '../../lib/bookstack';
+
+const PER_PAGE = 20;
+const site = await loadSite();
+const pages = recentlyUpdated(site.pages);
+const last = Math.max(1, Math.ceil(pages.length / PER_PAGE));
+const chunks = Array.from({ length: last }, (_, i) => pages.slice(i * PER_PAGE, (i + 1) * PER_PAGE));
+---
+
+<Simple>
+	<div class="container small pt-xl">
+		<main class="card content-wrap">
+			<h1 class="list-heading">Recently Updated Pages</h1>
+
+			{
+				chunks.map((chunk, i) => (
+					<>
+						<div class="book-contents" data-hs-page={i + 1} hidden={i > 0}>
+							<EntityList entities={chunk} style="detailed" />
+						</div>
+
+						<div class="text-center" data-hs-page={i + 1} hidden={i > 0}>
+							<Pagination base="/pages/recently-updated/" current={i + 1} last={last} />
+						</div>
+					</>
+				))
+			}
+		</main>
+	</div>
+</Simple>

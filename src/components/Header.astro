@@ -1,0 +1,40 @@
+---
+// common/header.blade.php, as seen by a guest (no log in: there is no server).
+import Icon from './Icon.astro';
+
+const { searchTerm = '' } = Astro.props;
+---
+
+<header id="header" component="header-mobile-toggle" class="primary-background">
+	<div class="grid mx-l">
+		<div>
+			<a href="/" class="logo">
+				<img class="logo-image" src="/uploads/images/system/2022-09/z4KDmyBtUP2wlHeh-logo-banner-try.png" alt="Logo" />
+			</a>
+			<button
+				type="button"
+				refs="header-mobile-toggle@toggle"
+				title="Expand Header Menu"
+				aria-expanded="false"
+				class="mobile-menu-toggle hide-over-l"><Icon name="more" /></button
+			>
+		</div>
+
+		<div class="flex-container-row justify-center hide-under-l">
+			<form action="/search/" method="GET" class="search-box" role="search">
+				<button id="header-search-box-button" type="submit" aria-label="Search" tabindex="-1"><Icon name="search" /> </button>
+				<input id="header-search-box-input" type="text" name="term" aria-label="Search" placeholder="Search" value={searchTerm} />
+			</form>
+		</div>
+
+		<div class="text-right">
+			<nav refs="header-mobile-toggle@menu" class="header-links">
+				<div class="links text-center">
+					<a class="hide-over-l" href="/search/"><Icon name="search" />Search</a>
+					<a href="/shelves/"><Icon name="bookshelf" />Shelves</a>
+					<a href="/books/"><Icon name="books" />Books</a>
+				</div>
+			</nav>
+		</div>
+	</div>
+</header>

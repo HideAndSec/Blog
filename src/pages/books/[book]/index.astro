@@ -1,0 +1,110 @@
+---
+// books/show.blade.php
+import ActionsHeading from '../../../components/ActionsHeading.astro';
+import ActivityList from '../../../components/ActivityList.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import ChapterListItem from '../../../components/ChapterListItem.astro';
+import EntityList from '../../../components/EntityList.astro';
+import EntityMeta from '../../../components/EntityMeta.astro';
+import EntitySearchForm from '../../../components/EntitySearchForm.astro';
+import EntitySearchResults from '../../../components/EntitySearchResults.astro';
+import ExportMenu from '../../../components/ExportMenu.astro';
+import PageListItem from '../../../components/PageListItem.astro';
+import Restrictions from '../../../components/Restrictions.astro';
+import TagList from '../../../components/TagList.astro';
+import Tri from '../../../layouts/Tri.astro';
+import { coverUrl, entityActivity, loadSite, shortName, type Book } from '../../../lib/bookstack';
+import { nl2br, strLimit } from '../../../lib/text';
+
+export async function getStaticPaths() {
+	const site = await loadSite();
+	return site.books.map((book) => ({ params: { book: book.slug }, props: { book } }));
+}
+
+const { book } = Astro.props as { book: Book };
+const site = await loadSite();
+const activity = entityActivity(site, book);
+---
+
+<Tri
+	title={shortName(book)}
+	shelfContext="from-query"
+	description={strLimit(book.description, 100)}
+	image={book.cover ? coverUrl(book) : undefined}
+	containerAttrs={{ 'hs-entity-search': '', 'data-hs-entity-id': String(book.id), 'data-hs-entity-type': 'book' }}
+>
+	<div class="mb-s">
+		<Breadcrumbs crumbs={[book]} />
+	</div>
+
+	<main class="content-wrap card">
+		<h1 class="break-text">{book.name}</h1>
+		<div refs="entity-search@contentView" class="book-content">
+			<p class="text-muted" set:html={nl2br(book.description)} />
+			{
+				book.tree.length > 0 ? (
+					<div class="entity-list book-contents">
+						{book.tree.map((child) =>
+							child.type === 'chapter' ? <ChapterListItem chapter={child} /> : <PageListItem page={child} />,
+						)}
+					</div>
+				) : (
+					<div class="mt-xl">
+						<hr />
+						<p class="text-muted italic mb-m mt-xl">No pages or chapters have been created for this book.</p>
+						<div class="icon-list block inline" />
+					</div>
+				)
+			}
+		</div>
+
+		<EntitySearchResults />
+	</main>
+
+	<Fragment slot="right">
+		<div class="mb-xl">
+			<h5>Details</h5>
+			<div class="text-small text-muted blended-links">
+				<EntityMeta entity={book} />
+				<Restrictions labels={book.restricted ? ['Book Permissions Active'] : []} />
+			</div>
+		</div>
+
+		<ActionsHeading>
+			<hr class="primary-background" />
+			<hr class="primary-background" />
+			<ExportMenu entity={book} />
+		</ActionsHeading>
+	</Fragment>
+
+	<Fragment slot="left">
+		<EntitySearchForm label="Search this book" />
+
+		{
+			book.tags.length > 0 && (
+				<div class="mb-xl">
+					<TagList tags={book.tags} />
+				</div>
+			)
+		}
+
+		{
+			book.shelves.length > 0 && (
+				<div class="actions mb-xl">
+					<h5>Bookshelves</h5>
+					<EntityList entities={book.shelves} style="compact" />
+				</div>
+			)
+		}
+
+		{
+			activity.length > 0 && (
+				<div class="mb-xl">
+					<h5>Recent Activity</h5>
+					<ActivityList activity={activity} />
+				</div>
+			)
+		}
+	</Fragment>
+</Tri>
+

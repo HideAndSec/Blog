@@ -1,0 +1,27 @@
+---
+// /link/{id}: BookStack's permanent page links, kept as redirects (with the #bookmark).
+import { loadSite, type Page } from '../../lib/bookstack';
+
+export async function getStaticPaths() {
+	const site = await loadSite();
+	return site.pages.map((page) => ({ params: { id: String(page.id) }, props: { page } }));
+}
+
+const { page } = Astro.props as { page: Page };
+---
+
+<!doctype html>
+<html lang="en-GB">
+	<head>
+		<meta charset="utf-8" />
+		<title>{page.name}</title>
+		<meta http-equiv="refresh" content={`0; url=${page.url}`} />
+		<link rel="canonical" href={new URL(page.url, Astro.site).href} />
+		<script is:inline define:vars={{ url: page.url }}>
+			location.replace(url + location.hash);
+		</script>
+	</head>
+	<body>
+		<a href={page.url}>{page.name}</a>
+	</body>
+</html>

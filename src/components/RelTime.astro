@@ -1,0 +1,22 @@
+---
+// A Carbon diffForHumans() date; public/js/hideandsec.js keeps it current after the build.
+import { dayDateTime, diffForHumans } from '../lib/time';
+
+interface Props {
+	date: Date;
+	/** Show the full date on hover, as entity meta does. */
+	withTitle?: boolean;
+	/** Text around the relative time, e.g. "Created :time". */
+	format?: string;
+	absolute?: boolean;
+}
+const { date, withTitle = false, format = ':time', absolute = false } = Astro.props;
+const text = format.replace(':time', diffForHumans(date, new Date(), absolute));
+---
+
+<span
+	title={withTitle ? dayDateTime(date) : undefined}
+	data-hs-time={date.toISOString()}
+	data-hs-format={format}
+	data-hs-absolute={absolute ? '' : undefined}>{text}</span
+>

@@ -1,0 +1,76 @@
+---
+// entities/breadcrumbs.blade.php + entities/breadcrumb-listing.blade.php
+import { shortName, type Entity } from '../lib/bookstack';
+import { siblingsUrl } from '../lib/urls';
+import Icon from './Icon.astro';
+
+interface Props {
+	crumbs: Entity[];
+	attrs?: Record<string, string | boolean>;
+}
+const { crumbs, attrs = {} } = Astro.props;
+const top = crumbs[0]?.type === 'book' ? 'books' : crumbs[0]?.type === 'bookshelf' ? 'shelves' : undefined;
+---
+
+<nav class="breadcrumbs text-center" aria-label="Breadcrumb" {...attrs}>
+	{
+		top === 'books' && (
+			<a href="/books/" class="text-book icon-list-item outline-hover">
+				<span>
+					<Icon name="books" />
+				</span>
+				<span>Books</span>
+			</a>
+		)
+	}
+	{
+		top === 'shelves' && (
+			<a href="/shelves/" class="text-bookshelf icon-list-item outline-hover">
+				<span>
+					<Icon name="bookshelf" />
+				</span>
+				<span>Shelves</span>
+			</a>
+		)
+	}
+	{
+		crumbs.map((crumb, i) => (
+			<>
+				{(top || i > 0) && (
+					<div
+						class="dropdown-search"
+						components="dropdown dropdown-search"
+						option:dropdown-search:url={siblingsUrl(crumb)}
+						option:dropdown-search:local-search-selector=".entity-list-item"
+					>
+						<div class="dropdown-search-toggle" refs="dropdown@toggle" aria-haspopup="true" aria-expanded="false" tabindex="0">
+							<div class="separator">
+								<Icon name="chevron-right" />
+							</div>
+						</div>
+						<div refs="dropdown@menu" class="dropdown-search-dropdown card" role="menu">
+							<div class="dropdown-search-search">
+								<Icon name="search" />
+								<input refs="dropdown-search@searchInput" aria-label="Search" autocomplete="off" placeholder="Search" type="text" />
+							</div>
+							<div refs="dropdown-search@loading">
+								<div class="loading-container">
+									<div />
+									<div />
+									<div />
+								</div>
+							</div>
+							<div refs="dropdown-search@listContainer" class="dropdown-search-list px-m" />
+						</div>
+					</div>
+				)}
+				<a href={crumb.url} class={`text-${crumb.type} icon-list-item outline-hover`}>
+					<span>
+						<Icon name={crumb.type} />
+					</span>
+					<span>{shortName(crumb)}</span>
+				</a>
+			</>
+		))
+	}
+</nav>

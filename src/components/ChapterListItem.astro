@@ -1,0 +1,46 @@
+---
+// chapters/parts/list-item.blade.php
+import { excerpt, type Chapter } from '../lib/bookstack';
+import EntityList from './EntityList.astro';
+import Icon from './Icon.astro';
+
+interface Props {
+	chapter: Chapter;
+}
+const { chapter } = Astro.props;
+const count = chapter.pages.length;
+---
+
+<a
+	href={chapter.url}
+	class={`chapter entity-list-item ${count > 0 ? 'has-children' : ''}`}
+	data-entity-type="chapter"
+	data-entity-id={chapter.id}
+>
+	<span class="icon text-chapter"><Icon name="chapter" /></span>
+	<div class="content">
+		<h4 class="entity-list-item-name break-text">{chapter.name}</h4>
+		<div class="entity-item-snippet">
+			<p class="text-muted break-text mb-s">{excerpt(chapter)}</p>
+		</div>
+	</div>
+</a>
+{
+	count > 0 && (
+		<div class="chapter chapter-expansion">
+			<span class="icon text-chapter">
+				<Icon name="page" />
+			</span>
+			<div class="content">
+				<button type="button" chapter-toggle aria-expanded="false" class="text-muted chapter-expansion-toggle">
+					<Icon name="caret-right" /> <span>{count === 1 ? '1 Page' : `${count} Pages`}</span>
+				</button>
+				<div class="inset-list">
+					<div class="entity-list-item-children">
+						<EntityList entities={chapter.pages} />
+					</div>
+				</div>
+			</div>
+		</div>
+	)
+}

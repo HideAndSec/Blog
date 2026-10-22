@@ -1,0 +1,30 @@
+---
+// books/parts/list-item.blade.php
+import { coverUrl, type Book } from '../lib/bookstack';
+import Icon from './Icon.astro';
+import { sortAttrs } from '../lib/sort';
+
+interface Props {
+	book: Book;
+	index?: number;
+}
+const { book, index = 0 } = Astro.props;
+---
+
+<a
+	href={book.url}
+	class="book entity-list-item"
+	data-entity-type="book"
+	data-entity-id={book.id}
+	{...sortAttrs(book, index)}
+>
+	<div class="entity-list-item-image bg-book" style={`background-image: url('${coverUrl(book)}')`}>
+		<Icon name="book" />
+	</div>
+	<div class="content">
+		<h4 class="entity-list-item-name break-text">{book.name}</h4>
+		<div class="entity-item-snippet">
+			<p class="text-muted break-text mb-s text-limit-lines-1">{book.description}</p>
+		</div>
+	</div>
+</a>

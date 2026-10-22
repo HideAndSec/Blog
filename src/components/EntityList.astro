@@ -1,0 +1,50 @@
+---
+// entities/list.blade.php + entities/list-item.blade.php
+import { excerpt, shortName, type Entity } from '../lib/bookstack';
+import EntityListItemBasic from './EntityListItemBasic.astro';
+import Icon from './Icon.astro';
+import TagList from './TagList.astro';
+
+interface Props {
+	entities: Entity[];
+	style?: string;
+	showPath?: boolean;
+	showTags?: boolean;
+	emptyText?: string;
+}
+const { entities, style = '', showPath = false, showTags = false, emptyText = 'No items available' } = Astro.props;
+---
+
+{
+	entities.length > 0 ? (
+		<div class={`entity-list ${style}`}>
+			{entities.map((entity) => (
+				<EntityListItemBasic entity={entity}>
+					<div class="entity-item-snippet">
+						{showPath && (entity.type === 'page' || entity.type === 'chapter') && (
+							<>
+								<span class="text-book">{shortName(entity.book, 42)}</span>
+								{entity.type === 'page' && entity.chapter && (
+									<>
+										<span class="text-muted entity-list-item-path-sep">
+											<Icon name="chevron-right" />
+										</span>{' '}
+										<span class="text-chapter">{shortName(entity.chapter, 42)}</span>
+									</>
+								)}
+							</>
+						)}
+						<p class="text-muted break-text">{excerpt(entity)}</p>
+					</div>
+					{showTags && entity.tags.length > 0 && (
+						<div class="entity-item-tags mt-xs">
+							<TagList tags={entity.tags} linked={false} />
+						</div>
+					)}
+				</EntityListItemBasic>
+			))}
+		</div>
+	) : (
+		<p class="text-muted empty-text">{emptyText}</p>
+	)
+}

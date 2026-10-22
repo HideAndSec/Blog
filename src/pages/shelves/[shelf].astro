@@ -1,0 +1,107 @@
+---
+// shelves/show.blade.php (grid view by default, as for guests).
+import ActivityList from '../../components/ActivityList.astro';
+import BookListItem from '../../components/BookListItem.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import EntityMeta from '../../components/EntityMeta.astro';
+import GridItem from '../../components/GridItem.astro';
+import Restrictions from '../../components/Restrictions.astro';
+import SortControl from '../../components/SortControl.astro';
+import TagList from '../../components/TagList.astro';
+import ViewToggle from '../../components/ViewToggle.astro';
+import Tri from '../../layouts/Tri.astro';
+import { coverUrl, entityActivity, loadSite, shortName, type Shelf } from '../../lib/bookstack';
+import { nl2br, strLimit } from '../../lib/text';
+
+export async function getStaticPaths() {
+	const site = await loadSite();
+	return site.shelves.map((shelf) => ({ params: { shelf: shelf.slug }, props: { shelf } }));
+}
+
+const { shelf } = Astro.props as { shelf: Shelf };
+const site = await loadSite();
+const activity = entityActivity(site, shelf);
+---
+
+<Tri shelfContext={{ set: shelf.id }} title={shortName(shelf)} description={strLimit(shelf.description, 100)} image={shelf.cover ? coverUrl(shelf) : undefined}>
+	<div class="mb-s">
+		<Breadcrumbs crumbs={[shelf]} />
+	</div>
+
+	<main class="card content-wrap">
+		<div class="flex-container-row wrap v-center">
+			<h1 class="flex fit-content break-text">{shelf.name}</h1>
+			<div class="flex"></div>
+			<div class="flex fit-content text-m-right my-m ml-m">
+				<SortControl
+					type="shelf_books"
+					options={{ default: 'Default', name: 'Name', created_at: 'Created Date', updated_at: 'Updated Date' }}
+				/>
+			</div>
+		</div>
+
+		<div class="book-content">
+			<p class="text-muted" set:html={nl2br(shelf.description)} />
+			{
+				shelf.books.length > 0 ? (
+					<>
+						<div class="entity-list" data-hs-view-list="shelf" data-hs-sortable="shelf_books">
+							{shelf.books.map((book, i) => (
+								<BookListItem book={book} index={i} />
+							))}
+						</div>
+						<div class="grid third" data-hs-view-grid="shelf" data-hs-sortable="shelf_books">
+							{shelf.books.map((book, i) => (
+								<GridItem entity={book} index={i} />
+							))}
+						</div>
+					</>
+				) : (
+					<div class="mt-xl">
+						<hr />
+						<p class="text-muted italic mt-xl mb-m">This shelf has no books assigned to it</p>
+						<div class="icon-list inline block" />
+					</div>
+				)
+			}
+		</div>
+	</main>
+
+	<Fragment slot="left">
+		{
+			shelf.tags.length > 0 && (
+				<div id="tags" class="mb-xl">
+					<TagList tags={shelf.tags} />
+				</div>
+			)
+		}
+
+		<div id="details" class="mb-xl">
+			<h5>Details</h5>
+			<div class="text-small text-muted blended-links">
+				<EntityMeta entity={shelf} />
+				<Restrictions labels={shelf.restricted ? ['Bookshelf Permissions Active'] : []} />
+			</div>
+		</div>
+
+		{
+			activity.length > 0 && (
+				<div class="mb-xl">
+					<h5>Recent Activity</h5>
+					<ActivityList activity={activity} />
+				</div>
+			)
+		}
+	</Fragment>
+
+	<Fragment slot="right">
+		<div class="actions mb-xl">
+			<h5>Actions</h5>
+			<div class="icon-list text-primary">
+				<ViewToggle type="shelf" />
+
+				<hr class="primary-background" />
+			</div>
+		</div>
+	</Fragment>
+</Tri>

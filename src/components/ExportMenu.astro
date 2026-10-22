@@ -1,0 +1,35 @@
+---
+// entities/export-menu.blade.php, without the PDF export the live site hid.
+import type { Entity } from '../lib/bookstack';
+import { exportUrl } from '../lib/urls';
+import Icon from './Icon.astro';
+
+interface Props {
+	entity: Entity;
+}
+const { entity } = Astro.props;
+---
+
+<div component="dropdown" class="dropdown-container" id="export-menu">
+	<div refs="dropdown@toggle" class="icon-list-item" aria-haspopup="true" aria-expanded="false" aria-label="Export" tabindex="0">
+		<span><Icon name="export" /></span>
+		<span>Export</span>
+	</div>
+	<ul refs="dropdown@menu" class="wide dropdown-menu" role="menu">
+		<li>
+			<a href={exportUrl(entity, 'html')} target="_blank" rel="noopener" download
+				>Contained Web File <span class="text-muted float right">.html</span></a
+			>
+		</li>
+		<li>
+			<a href={exportUrl(entity, 'txt')} target="_blank" rel="noopener" download
+				>Plain Text File <span class="text-muted float right">.txt</span></a
+			>
+		</li>
+		<li>
+			<a href={exportUrl(entity, 'md')} target="_blank" rel="noopener" download
+				>Markdown File <span class="text-muted float right">.md</span></a
+			>
+		</li>
+	</ul>
+</div>

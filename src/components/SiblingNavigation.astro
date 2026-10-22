@@ -1,0 +1,48 @@
+---
+// entities/sibling-navigation.blade.php
+import { shortName, type Entity } from '../lib/bookstack';
+import Icon from './Icon.astro';
+
+interface Props {
+	previous?: Entity;
+	next?: Entity;
+}
+const { previous, next } = Astro.props;
+---
+
+<div id="sibling-navigation" class="grid half collapse-xs items-center mb-m px-m no-row-gap fade-in-when-active print-hidden">
+	<div>
+		{
+			previous && (
+				<a href={previous.url} class="outline-hover no-link-style block rounded">
+					<div class="px-m pt-xs text-muted">Previous</div>
+					<div class="inline-block">
+						<div class="icon-list-item no-hover">
+							<span class={`text-${previous.type} `}>
+								<Icon name={previous.type} />
+							</span>
+							<span>{shortName(previous, 48)}</span>
+						</div>
+					</div>
+				</a>
+			)
+		}
+	</div>
+	<div>
+		{
+			next && (
+				<a href={next.url} class="outline-hover no-link-style block rounded text-xs-right">
+					<div class="px-m pt-xs text-muted text-xs-right">Next</div>
+					<div class="inline block">
+						<div class="icon-list-item no-hover">
+							<span class={`text-${next.type} `}>
+								<Icon name={next.type} />
+							</span>
+							<span>{shortName(next, 48)}</span>
+						</div>
+					</div>
+				</a>
+			)
+		}
+	</div>
+</div>

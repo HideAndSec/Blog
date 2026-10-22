@@ -1,0 +1,16 @@
+---
+// pages/parts/list-item.blade.php
+import { excerpt, type Page } from '../lib/bookstack';
+import EntityListItemBasic from './EntityListItemBasic.astro';
+
+interface Props {
+	page: Page;
+}
+const { page } = Astro.props;
+---
+
+<EntityListItemBasic entity={page}>
+	<div class="entity-item-snippet">
+		<p class="text-muted break-text">{excerpt(page)}</p>
+	</div>
+</EntityListItemBasic>

@@ -1,0 +1,100 @@
+---
+// chapters/show.blade.php
+import ActionsHeading from '../../../../../components/ActionsHeading.astro';
+import BookTree from '../../../../../components/BookTree.astro';
+import Breadcrumbs from '../../../../../components/Breadcrumbs.astro';
+import EntityMeta from '../../../../../components/EntityMeta.astro';
+import EntitySearchForm from '../../../../../components/EntitySearchForm.astro';
+import EntitySearchResults from '../../../../../components/EntitySearchResults.astro';
+import ExportMenu from '../../../../../components/ExportMenu.astro';
+import PageListItem from '../../../../../components/PageListItem.astro';
+import Restrictions from '../../../../../components/Restrictions.astro';
+import SiblingNavigation from '../../../../../components/SiblingNavigation.astro';
+import TagList from '../../../../../components/TagList.astro';
+import Tri from '../../../../../layouts/Tri.astro';
+import { loadSite, shortName, siblingsInReadingOrder, type Chapter } from '../../../../../lib/bookstack';
+import { nl2br, strLimit } from '../../../../../lib/text';
+
+export async function getStaticPaths() {
+	const site = await loadSite();
+	return site.chapters.map((chapter) => ({
+		params: { book: chapter.book.slug, chapter: chapter.slug },
+		props: { chapter },
+	}));
+}
+
+const { chapter } = Astro.props as { chapter: Chapter };
+const { book } = chapter;
+const { previous, next } = siblingsInReadingOrder(chapter);
+---
+
+<Tri
+	title={shortName(chapter)}
+	description={strLimit(chapter.description, 100)}
+	containerAttrs={{ 'hs-entity-search': '', 'data-hs-entity-id': String(chapter.id), 'data-hs-entity-type': 'chapter' }}
+>
+	<div class="mb-m print-hidden">
+		<Breadcrumbs crumbs={[book, chapter]} />
+	</div>
+
+	<main class="content-wrap card">
+		<h1 class="break-text">{chapter.name}</h1>
+		<div refs="entity-search@contentView" class="chapter-content">
+			<p class="text-muted break-text" set:html={nl2br(chapter.description)} />
+			{
+				chapter.pages.length > 0 ? (
+					<div class="entity-list book-contents">
+						{chapter.pages.map((page) => (
+							<PageListItem page={page} />
+						))}
+					</div>
+				) : (
+					<div class="mt-xl">
+						<hr />
+						<p class="text-muted italic mb-m mt-xl">No pages are currently in this chapter.</p>
+						<div class="icon-list block inline" />
+					</div>
+				)
+			}
+		</div>
+
+		<EntitySearchResults />
+	</main>
+
+	<SiblingNavigation previous={previous} next={next} />
+
+	<Fragment slot="right">
+		<div class="mb-xl">
+			<h5>Details</h5>
+			<div class="blended-links text-small text-muted">
+				<EntityMeta entity={chapter} />
+				<Restrictions
+					labels={[
+						...(book.restricted ? ['Book Permissions Active'] : []),
+						...(chapter.restricted ? ['Chapter Permissions Active'] : []),
+					]}
+				/>
+			</div>
+		</div>
+
+		<ActionsHeading>
+			<hr class="primary-background" />
+			<hr class="primary-background" />
+			<ExportMenu entity={chapter} />
+		</ActionsHeading>
+	</Fragment>
+
+	<Fragment slot="left">
+		<EntitySearchForm label="Search this chapter" />
+
+		{
+			chapter.tags.length > 0 && (
+				<div class="mb-xl">
+					<TagList tags={chapter.tags} />
+				</div>
+			)
+		}
+
+		<BookTree book={book} current={chapter} />
+	</Fragment>
+</Tri>
