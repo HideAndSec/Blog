@@ -27,6 +27,8 @@ jobs:
       - uses: withastro/action@v4
         with:
           package-manager: bun@latest
+          # Astro 7 needs a newer Node than the action's default 22.x.
+          node-version: 24
 
   deploy:
     if: github.event_name != 'pull_request'
